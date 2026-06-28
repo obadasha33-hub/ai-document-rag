@@ -1,0 +1,206 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+// Simplified: Only FREE tier since the platform is now entirely free
+enum SubscriptionStatus {
+  FREE
+}
+
+enum DocumentStatus {
+  UPLOADING
+  PROCESSING
+  INDEXED
+  ERROR
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model Tenant {
+  id                 String      @id @default(uuid()) @db.Uuid
+  name               String
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  workspaces      Workspace[]
+  users          User[]
+  documents      Document[]
+  chunks         Chunk[]
+  auditLogs      AuditLog[]
+  tenantUsage    TenantUsage[]
+  apiKeys        ApiKey[]
+  chatThreads    ChatThread[]
+
+  @@map("tenants")
+}
+
+model User {
+  id      String   @id
+  // Maps directly to Auth Provider ID (Clerk/Supabase)
+  tenantId String @db.Uuid
+  email   String   @unique
+  name    String?
+  role    Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  auditLogs   AuditLog[]
+  chatThreads ChatThread[]
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+model Workspace {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @db.Uuid
+  name         String
+  systemPrompt String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documents   Document[]
+  chatThreads ChatThread[]
+
+  @@index([tenantId])
+  @@map("workspaces")
+}
+
+model Document {
+  id            String         @id @default(uuid()) @db.Uuid
+  tenantId      String         @db.Uuid
+  workspaceId   String         @db.Uuid
+  name          String
+  filePath      String         @db.Text // Path in S3 / cloud storage
+  fileSize      Int            // Size in bytes
+  mimeType      String
+  status        DocumentStatus @default(UPLOADING)
+  errorMessage  String?        @db.Text
+  metadata      Json?          // Holds user custom tags (e.g., Department, Category)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  chunks    Chunk[]
+
+  @@index([tenantId, workspaceId])
+  @@map("documents")
+}
+
+model Chunk {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  documentId  String   @db.Uuid
+  content     String   @db.Text
+  pageNumber  Int?
+  tokenCount  Int
+  // Embedding is stored as a JSON array of numbers so we don't need the pgvector extension
+  // (and the in-memory search fallback does its own cosine anyway).
+  embedding   Json?
+  createdAt   DateTime @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, documentId])
+  @@map("chunks")
+}
+
+model TenantUsage {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @db.Uuid
+  month          String   // Format: "YYYY-MM"
+  documentCount  Int      @default(0)
+  storageBytes    BigInt  @default(0)
+  queryCount      Int     @default(0)
+  apiCallCount    Int     @default(0)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, month])
+  @@map("tenant_usages")
+}
+
+model ApiKey {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  name       String
+  keyHash    String   @unique // Hashed version (SHA-256) of API key
+  keyHint    String   // Shown in dashboard: "sk_live_...4f9a"
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("api_keys")
+}
+
+model ChatThread {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  workspaceId String   @db.Uuid
+  userId      String
+  title       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+
+  @@index([tenantId, workspaceId, userId])
+  @@map("chat_threads")
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid()) @db.Uuid
+  threadId  String      @db.Uuid
+  role      MessageRole
+  content   String      @db.Text
+  citations Json?      // JSON array of citation blocks: [{ docId, docName, pageNumber, snippet }]
+  createdAt DateTime    @default(now())
+
+  thread ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@map("chat_messages")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  userId      String?  // Null for system-automated events
+  action      String   // E.g., "FILE_UPLOAD", "WORKSPACE_PURGED", "PERMISSIONS_CHANGED"
+  description String   @db.Text
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@map("audit_logs")
+}

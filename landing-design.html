@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DocIntel - AI Document Intelligence & Semantic RAG Platform</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* =========================================================================
+ *  DocIntel — Design System
+ *  -----------------------------------------------------------------------
+ *  No glassmorphism, no glow, no gradients, no shimmer, no pulse.
+ *  Just ink on panel. The product teaches the rest.
+ *
+ *  Token strategy: every surface color traces back to ONE base palette.
+ *  Components reference tokens only — no hardcoded hex anywhere downstream.
+ * ========================================================================= */
+:root {
+  /* ===== Palette (one source of truth) =================================== */
+  --ink-1000: #0b0d10; /* deepest text */
+  --ink-900: #16191e;
+  --ink-800: #232831;
+  --ink-700: #2f3440;
+  --ink-600: #4a505d;
+  --ink-500: #6b7180;
+  --ink-400: #98a0ad;
+  --ink-300: #c2c8d2;
+  --ink-200: #dfe3eb;
+  --ink-100: #eef0f4;
+  --ink-50:  #f5f6f9;
+  --ink-0:   #ffffff;
+
+  --accent-600: #4f46e5;
+  --accent-500: #6366f1;
+  --accent-400: #818cf8;
+  --accent-100: #e0e7ff;
+
+  --success-600: #047857;
+  --success-500: #10b981;
+  --success-100: #d1fae5;
+
+  --warning-600: #b45309;
+  --warning-500: #f59e0b;
+  --warning-100: #fef3c7;
+
+  --danger-600:  #b91c1c;
+  --danger-500:  #ef4444;
+  --danger-100:  #fee2e2;
+
+  /* ===== Semantic surface tokens ======================================== */
+  --bg:           var(--ink-50);
+  --panel:        var(--ink-0);
+  --panel-sunken: var(--ink-100);
+  --border-1:     var(--ink-200);
+  --border-2:     var(--ink-300);
+
+  --text-1:       var(--ink-900);
+  --text-2:       var(--ink-700);
+  --text-3:       var(--ink-500);
+  --text-inv:     var(--ink-0);
+
+  --accent:       var(--accent-500);
+  --accent-hover: var(--accent-600);
+  --accent-soft:  var(--accent-100);
+  --on-accent:    var(--ink-0);
+
+  /* ===== Typography ===================================================== */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  /* Default weights we actually use: 400, 500, 600, 700 — refined weights pull away from being human */
+  /* ===== Spacing (4px grid) ============================================= */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ===== Radii ======================================================== */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* ===== Shadow (one soft tier for surfaces, one sharp tier for floats) == */
+  --shadow-1: 0 1px 0 0 var(--border-1);
+  --shadow-2: 0 1px 2px rgba(11, 13, 16, 0.04), 0 1px 0 0 var(--border-1);
+  --shadow-3: 0 8px 24px rgba(11, 13, 16, 0.08), 0 1px 0 0 var(--border-1);
+
+  /* ===== Motion ======================================================== */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 120ms;
+  --t-base: 180ms;
+  --t-slow: 320ms;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:           #0a0c10;
+    --panel:        #11141a;
+    --panel-sunken: #0a0c10;
+    --border-1:     #1c2028;
+    --border-2:     #2a2f3a;
+
+    --text-1:       #f0f2f6;
+    --text-2:       #c2c8d2;
+    --text-3:       #747a85;
+
+    --accent:       var(--accent-400);
+    --accent-hover: var(--accent-500);
+    --accent-soft:  rgba(99, 102, 241, 0.18);
+    --on-accent:    #0b0d10;
+
+    --shadow-1: 0 1px 0 0 var(--border-1);
+    --shadow-2: 0 1px 2px rgba(0,0,0,0.4), 0 1px 0 0 var(--border-1);
+    --shadow-3: 0 12px 32px rgba(0,0,0,0.5), 0 1px 0 0 var(--border-1);
+  }
+}
+
+/* =========================================================================
+ *  Reset
+ * ========================================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 14px;
+  line-height: 1.5;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; max-width: 100%; }
+::selection { background: var(--accent-soft); color: var(--text-1); }
+
+/* =========================================================================
+ *  Type scale (only what we actually use)
+ * ========================================================================= */
+.t-display { font-family: var(--font-display); font-size: 48px; line-height: 1.05; font-weight: 700; letter-spacing: -0.025em; }
+.t-h1 { font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.015em; }
+.t-h2 { font-size: 22px; line-height: 1.2;  font-weight: 600; letter-spacing: -0.01em; }
+.t-h3 { font-size: 16px; line-height: 1.3;  font-weight: 600; }
+.t-body { font-size: 14px; line-height: 1.55; }
+.t-small { font-size: 12px; line-height: 1.45; }
+.t-mono { font-family: var(--font-mono); font-size: 12.5px; }
+
+.t-1 { color: var(--text-1); }
+.t-2 { color: var(--text-2); }
+.t-3 { color: var(--text-3); }
+.t-a { color: var(--accent); }
+
+/* =========================================================================
+ *  Surface & layout primitives
+ * ========================================================================= */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+.panel-flush { background: var(--panel-sunken); border-color: var(--border-1); border-radius: var(--radius-lg); }
+.divider { border-top: 1px solid var(--border-1); }
+
+/* Stacks & rows */
+.stack-1 { display: grid; gap: var(--space-1); }
+.stack-2 { display: grid; gap: var(--space-2); }
+.stack-3 { display: grid; gap: var(--space-3); }
+.stack-4 { display: grid; gap: var(--space-4); }
+.stack-6 { display: grid; gap: var(--space-6); }
+.stack-8 { display: grid; gap: var(--space-8); }
+.row { display: flex; align-items: center; gap: var(--space-3); }
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+/* =========================================================================
+ *  Buttons
+ *  Three intents × three sizes, no glow, no shimmer.
+ * ========================================================================= */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 36px; padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  white-space: nowrap;
+  user-select: none;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:active:not(:disabled) { transform: translateY(0.5px); }
+
+.btn-primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+.btn-secondary { background: var(--panel); color: var(--text-1); border-color: var(--border-2); }
+.btn-secondary:hover:not(:disabled) { background: var(--panel-sunken); border-color: var(--text-3); }
+
+.btn-ghost { background: transparent; color: var(--text-2); }
+.btn-ghost:hover:not(:disabled) { background: var(--panel-sunken); color: var(--text-1); }
+
+.btn-danger { background: var(--panel); color: var(--danger-600); border-color: var(--border-2); }
+.btn-danger:hover:not(:disabled) { background: var(--danger-100); border-color: var(--danger-500); color: var(--danger-600); }
+
+.btn-lg { height: 44px; padding: 0 var(--space-6); font-size: 14px; border-radius: var(--radius-lg); }
+.btn-sm { height: 28px; padding: 0 var(--space-3); font-size: 12px; }
+.btn-icon { width: 36px; padding: 0; }
+.btn-icon.btn-sm { width: 28px; }
+
+/* =========================================================================
+ *  Input
+ * ========================================================================= */
+.input,
+.textarea {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  background: var(--panel);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--text-1);
+  outline: none;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.textarea { height: auto; padding: var(--space-3); resize: vertical; min-height: 80px; line-height: 1.5; }
+.input:focus, .textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.input::placeholder, .textarea::placeholder { color: var(--text-3); }
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: var(--space-1);
+}
+
+/* =========================================================================
+ *  Badge / Chip / Pill
+ * ========================================================================= */
+.badge {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px; font-weight: 500;
+  border: 1px solid var(--border-2);
+  background: var(--panel);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.badge-accent  { background: var(--accent-soft);  color: var(--accent);     border-color: transparent; }
+.badge-success { background: var(--success-100); color: var(--success-600); border-color: transparent; }
+.badge-warning { background: var(--warning-100); color: var(--warning-600); border-color: transparent; }
+.badge-danger  { background: var(--danger-100);  color: var(--danger-600);  border-color: transparent; }
+.badge-dot::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; opacity: 0.9;
+}
+
+/* =========================================================================
+ *  Tables (truly tabular surfaces, NOT glass cards)
+ * ========================================================================= */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.table thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--panel-sunken);
+}
+.table tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-1);
+  vertical-align: middle;
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: var(--panel-sunken); }
+.table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* =========================================================================
+ *  Scrollbars (subtle)
+ * ========================================================================= */
+* { scrollbar-color: var(--border-2) transparent; scrollbar-width: thin; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* =========================================================================
+ *  Helper classes (intentionally few)
+ * ========================================================================= */
+.muted { color: var(--text-3); }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.numeric { font-variant-numeric: tabular-nums; }
+
+.divide-y > * + * { border-top: 1px solid var(--border-1); }
+
+/* Fade-in for streamed tokens (used in chat) */
+@keyframes token-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.cursor-blink {
+  display: inline-block; width: 7px; height: 14px;
+  background: currentColor; margin-left: 2px; vertical-align: middle;
+  animation: token-blink 1s ease-in-out infinite;
+}
+
+@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.pulse-soft { animation: pulse-soft 2s var(--ease) infinite; }
+
+@keyframes spinner-spin { to { transform: rotate(360deg); } }
+.spinner { animation: spinner-spin 0.9s linear infinite; }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--ink-100) 0%, var(--ink-200) 50%, var(--ink-100) 100%);
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+  border-radius: var(--radius-sm);
+}
+@media (prefers-color-scheme: dark) {
+  .skeleton { background: linear-gradient(90deg, var(--ink-800) 0%, var(--ink-700) 50%, var(--ink-800) 100%); background-size: 200px 100%; }
+}
+
+/* =========================================================================
+ *  Layout shells
+ * ========================================================================= */
+
+/* App shell: sticky top bar + optional sidebar + content area */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+@media (min-width: 1024px) {
+  .app.with-sidebar {
+    grid-template-columns: 256px 1fr;
+    grid-template-rows: 1fr;
+  }
+}
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+  padding: 0 var(--space-6);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--panel);
+  position: sticky; top: 0; z-index: 50;
+}
+.sidebar {
+  border-right: 1px solid var(--border-1);
+  background: var(--panel);
+  display: flex; flex-direction: column;
+  padding: var(--space-4);
+  gap: var(--space-4);
+  position: sticky; top: 0;
+  height: 100vh; overflow-y: auto;
+}
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  height: 36px; padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-2);
+  font-size: 13px; font-weight: 500;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.nav-item:hover { background: var(--panel-sunken); color: var(--text-1); }
+.nav-item[data-active="true"] {
+  background: var(--accent-soft); color: var(--accent);
+}
+.nav-section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 0 var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+.app-content {
+  padding: var(--space-8);
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Marketing surface (landing) — distinct from app shell */
+.surface-marketing {
+  background: var(--bg);
+  color: var(--text-1);
+}
+
+/* =========================================================================
+ *  Landing page specific tweaks (optional)
+ * ========================================================================= */
+.container { max-width: 1080px; margin: 0 auto; padding: 0 var(--space-6); }
+.hero { text-align: center; padding: var(--space-20) var(--space-6) var(--space-16); }
+.features { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); padding: var(--space-12) var(--space-6); }
+.steps { padding: var(--space-12) var(--space-6) var(--space-20); }
+.steps ol { list-style: none; padding: 0; }
+.steps li { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-5) var(--space-6); border-top: 1px solid var(--border-1); }
+.steps li:first-child { border-top: none; }
+.step-number { background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-size: 12.5px; padding: 2px 8px; border-radius: var(--radius-pill); flex: 0 0 auto; }
+.footer { border-top: 1px solid var(--border-1); padding: var(--space-8) var(--space-6); display: flex; justify-content: space-between; flex-wrap: gap; gap: var(--space-4); font-size: 12px; color: var(--text-3); }
+</style>
+</head>
+<body class="surface-marketing">
+<div class="container">
+  <header class="row-between" style="padding: var(--space-6) 0;">
+    <div class="row" style="gap: var(--space-3);">
+      <span style="width: 32px; height: 32px; border-radius: 10px; background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center;">
+        <!-- Placeholder logo -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="t-h3">DocIntel</span>
+    </div>
+    <nav class="row" style="gap: var(--space-2);">
+      <a href="#capabilities" class="btn btn-ghost btn-sm">Capabilities</a>
+      <a href="#how" class="btn btn-ghost btn-sm">How it works</a>
+      <a href="/dashboard" class="btn btn-primary btn-sm">Open app</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="badge badge-accent" style="margin-bottom: var(--space-4);">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Multi-tenant document RAG
+    </span>
+    <h1 class="t-display" style="max-width: 760px; margin: 0 auto var(--space-4);">
+      Ask your documents. Get answers with citations.
+    </h1>
+    <p class="t-body t-2" style="max-width: 640px; margin: 0 auto var(--space-8);">
+      DocIntel is a multi-tenant RAG platform: ingest PDFs, DOCX, and Markdown into a hybrid<br>
+      lexical + semantic index, then stream cited answers from an LLM. Built on PostgreSQL,<br>
+      Prisma, and Next.js.
+    </p>
+    <div class="row" style="justify-content: center; gap: var(--space-3);">
+      <a href="/dashboard" class="btn btn-primary btn-lg">
+        Open dashboard
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="/dashboard/chat" class="btn btn-secondary btn-lg">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 8H8a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Try the chat
+      </a>
+    </div>
+  </section>
+
+  <section id="capabilities">
+    <div class="container">
+      <h2 class="t-h2" style="text-align: center; margin-bottom: var(--space-4);">What it actually does</h2>
+      <div class="features">
+        <div class="panel" style="padding: var(--space-6);">
+          <div class="row" style="gap: var(--space-3); align-items: flex-start;">
+            <div style="width: 22px; height: 22px; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 4H3c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h5v-2H3V6h18v13h-5v2h5c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="9 11 12 14 17 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="t-h3" style="margin-top: var(--space-3);">Ingest</h3>
+              <p class="t-small t-2" style="margin-top: 6px;">
+                Upload a document; it's parsed, chunked, and embedded — ingested records<br>
+                appear in the dashboard and become queryable.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding: var(--space-6);">
+          <div class="row" style="gap: var(--space-3); align-items: flex-start;">
+            <div style="width: 22px; height: 22px; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                <line x1="21" y1="21" x2="15.5" y2="15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="t-h3" style="margin-top: var(--space-3);">Retrieve</h3>
+              <p class="t-small t-2" style="margin-top: 6px;">
+                Hybrid lexical + semantic search with reciprocal-rank fusion. Citations<br>
+                accompany every answer with the exact passage that was read.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding: var(--space-6);">
+          <div class="row" style="gap: var(--space-3); align-items: flex-start;">
+            <div style="width: 22px; height: 22px; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v3c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="t-h3" style="margin-top: var(--space-3);">Govern</h3>
+              <p class="t-small t-2" style="margin-top: 6px;">
+                Per-tenant isolation, Stripe-metered quotas, GUID-stamped audit<br>
+                log, and a one-click GDPR hard purge of workspace data.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="container">
+      <h2 class="t-h2" style="text-align: center; margin-bottom: var(--space-4);">How it works</h2>
+      <div class="steps">
+        <ol>
+          <li>
+            <span class="step-number">01</span>
+            <div>
+              <h3 class="t-h3">Drop a document</h3>
+              <p class="t-small t-2" style="margin-top: 6px;">
+                PDF, DOCX, Markdown, TXT, CSV. The system parses and chunks the file at<br>
+                query-time semantic boundaries.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">02</span>
+            <div>
+              <h3 class="t-h3">Ask</h3>
+              <p class="t-small class="t-small t-2" style="margin-top: 6px;">
+                A typed query enters the chat. Hybrid retrieval surfaces the most relevant<br>
+                chunks across your workspace.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">03</span>
+            <div>
+              <h3 class="t-h3">Get a cited answer</h3>
+              <p class="t-small t-2" style="margin-top: 6px;">
+                The model is constrained by an anti-hallucination prompt. Every claim is<br>
+                anchored to a chunk ID.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <footer class="container" style="border-top: 1px solid var(--border-1); margin-top: var(--space-20); padding: var(--space-8) 0;">
+    <div class="row-between" style="gap: var(--space-3); flex-wrap: wrap;">
+      <span class="t-small t-3">© DocIntel</span>
+      <span class="t-small t-3">Next.js · Prisma · PostgreSQL · NVIDIA NIM</span>
+    </div>
+  </footer>
+</div>
+</body>
+</html>
