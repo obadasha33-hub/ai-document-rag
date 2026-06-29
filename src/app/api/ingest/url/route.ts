@@ -101,7 +101,17 @@ export async function POST(request: NextRequest) {
     const documentName = crawlResult.title || `Web Page: ${url.replace(/^https?:\/\/(www\.)?/, '')}`
     const fakeFileSize = Buffer.byteLength(crawlResult.markdown, 'utf8')
 
-    // 3. Write document creation and chunk vector inserts inside a transaction
+    // 3. Generate all embeddings outside the transaction to prevent database transaction timeouts
+    const chunksWithEmbeddings = []
+    for (const chunk of chunks) {
+      const embedding = await getEmbedding(chunk.content)
+      chunksWithEmbeddings.push({
+        ...chunk,
+        embedding
+      })
+    }
+
+    // 4. Write document creation and chunk vector inserts inside a transaction
     const result = await basePrisma.$transaction(async (tx) => {
       const doc = await tx.document.create({
         data: {
@@ -120,18 +130,17 @@ export async function POST(request: NextRequest) {
       })
       document = doc
 
-      for (const chunk of chunks) {
+      for (const item of chunksWithEmbeddings) {
         const chunkId = randomUUID()
-        const embedding = await getEmbedding(chunk.content)
         await tx.$executeRawUnsafe(
           'INSERT INTO chunks (id, "tenantId", "documentId", content, "pageNumber", "tokenCount", embedding) VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5, $6, $7::jsonb)',
           chunkId,
           tenantId,
           doc.id,
-          chunk.content,
+          item.content,
           null,
-          chunk.tokenCount,
-          JSON.stringify(embedding)
+          item.tokenCount,
+          JSON.stringify(item.embedding)
         )
       }
 

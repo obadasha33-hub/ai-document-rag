@@ -167,7 +167,17 @@ export async function POST(request: NextRequest) {
       throw new Error('No content could be extracted or chunked from document.')
     }
 
-    // 3. Write document creations, chunk inserts, and usage increments inside a database transaction block
+    // 3. Generate all embeddings outside the transaction to prevent database transaction timeouts
+    const chunksWithEmbeddings = []
+    for (const chunk of chunks) {
+      const embedding = await getEmbedding(chunk.content)
+      chunksWithEmbeddings.push({
+        ...chunk,
+        embedding
+      })
+    }
+
+    // 4. Write document creations, chunk inserts, and usage increments inside a database transaction block
     const result = await basePrisma.$transaction(async (tx) => {
       // Create the document model entry with processing status
       const doc = await tx.document.create({
@@ -185,20 +195,17 @@ export async function POST(request: NextRequest) {
       document = doc
 
       // Insert chunks with real embeddings stored as JSON arrays.
-      // Each call falls back to deterministic mock embeddings when GOOGLE_API_KEY is unset,
-      // so the system still works fully offline.
-      for (const chunk of chunks) {
+      for (const item of chunksWithEmbeddings) {
         const chunkId = randomUUID()
-        const embedding = await getEmbedding(chunk.content)
         await tx.$executeRawUnsafe(
           'INSERT INTO chunks (id, "tenantId", "documentId", content, "pageNumber", "tokenCount", embedding) VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5, $6, $7::jsonb)',
           chunkId,
           tenantId,
           doc.id,
-          chunk.content,
-          chunk.metadata?.pageNumber || null,
-          chunk.tokenCount,
-          JSON.stringify(embedding)
+          item.content,
+          item.metadata?.pageNumber || null,
+          item.tokenCount,
+          JSON.stringify(item.embedding)
         )
       }
 
