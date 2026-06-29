@@ -156,7 +156,7 @@ export default function OverviewPage() {
               <p className="t-small" style={{ marginTop: 8 }}>Nothing here yet.</p>
             </div>
           ) : (
-            <table className="table">
+            <div className="table-wrap"><table className="table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -185,7 +185,7 @@ export default function OverviewPage() {
                   )
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
         </section>
       </div>

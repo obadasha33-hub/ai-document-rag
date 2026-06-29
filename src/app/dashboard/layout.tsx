@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Sidebar } from '@/components/Sidebar'
+import { Icon } from '@/components/Icon'
 import { getBootstrapData, BootstrapData } from './actions'
 
 interface Ctx {
@@ -25,6 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [data, setData] = useState<BootstrapData | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activeWorkspaceId, setActiveWorkspaceId] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
   const load = async (wsId?: string) => {
@@ -36,7 +38,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } catch (err: any) {
       console.error('Failed to load dashboard bootstrap data:', err)
       const msg: string = err?.message || String(err)
-      // Only redirect for auth errors — show a proper error UI for everything else
       if (msg.toLowerCase().includes('unauthorized') || msg.toLowerCase().includes('unauthenticated')) {
         router.push('/')
       } else {
@@ -47,10 +48,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => { void load() }, [])
 
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [children])
+
   const refreshData = async () => { await load(activeWorkspaceId) }
   const setSubscription = async () => { void 0 }
 
-  // ── Loading state ────────────────────────────────────────────────────────────
   if (!data && !loadError) {
     return (
       <div style={{
@@ -63,7 +68,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     )
   }
 
-  // ── Error state ──────────────────────────────────────────────────────────────
   if (loadError) {
     return (
       <div style={{
@@ -110,6 +114,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <DashboardCtx.Provider value={ctx}>
+      {/* Mobile top bar with hamburger */}
+      <div className="mobile-topbar">
+        <button
+          className="mobile-hamburger"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open navigation menu"
+        >
+          <Icon name="cpu" size={18} />
+        </button>
+        <span className="t-h3">{data!.tenant.name}</span>
+        <div style={{ width: 40 }} />
+      </div>
+
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
       <div className="app with-sidebar">
         <Sidebar
           tenantName={data!.tenant.name}
@@ -118,6 +140,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           activeWorkspaceId={activeWorkspaceId}
           onSelectWorkspace={ctx.setActiveWorkspaceId}
           currentUser={data!.currentUser}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
         {children}
       </div>

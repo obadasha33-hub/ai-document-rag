@@ -12,6 +12,8 @@ interface SidebarProps {
   activeWorkspaceId: string
   onSelectWorkspace: (id: string) => void
   currentUser: { name: string; email: string }
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 export function Sidebar({
@@ -21,6 +23,8 @@ export function Sidebar({
   activeWorkspaceId,
   onSelectWorkspace,
   currentUser,
+  isOpen = false,
+  onClose,
 }: SidebarProps) {
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href
@@ -38,9 +42,24 @@ export function Sidebar({
     localStorage.setItem('theme', nextTheme)
   }
 
+  const handleNavClick = () => {
+    if (onClose) onClose()
+  }
+
   return (
-    <aside className="sidebar">
-      <Link href="/" className="row" style={{ padding: '0 4px', textDecoration: 'none' }}>
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      {onClose && (
+        <button
+          className="btn btn-ghost btn-sm btn-icon"
+          onClick={onClose}
+          aria-label="Close sidebar"
+          style={{ alignSelf: 'flex-end', marginBottom: 'var(--space-2)' }}
+        >
+          <Icon name="arrow-left" size={16} />
+        </button>
+      )}
+
+      <Link href="/" className="row" style={{ padding: '0 4px', textDecoration: 'none' }} onClick={handleNavClick}>
         <div
           className="row"
           style={{
@@ -93,11 +112,11 @@ export function Sidebar({
 
       <nav className="nav-group" aria-label="Main Navigation">
         <div className="nav-section-label">Navigate</div>
-        <Link href="/dashboard" className="nav-item" data-active={isActive('/dashboard')}>
+        <Link href="/dashboard" className="nav-item" data-active={isActive('/dashboard')} onClick={handleNavClick}>
           <Icon name="cpu" size={16} />
           <span>Overview</span>
         </Link>
-        <Link href="/dashboard/chat" className="nav-item" data-active={isActive('/dashboard/chat')}>
+        <Link href="/dashboard/chat" className="nav-item" data-active={isActive('/dashboard/chat')} onClick={handleNavClick}>
           <Icon name="quote" size={16} />
           <span>Ask</span>
         </Link>
@@ -105,14 +124,14 @@ export function Sidebar({
 
       <nav className="nav-group" aria-label="Compliance Navigation">
         <div className="nav-section-label">Compliance</div>
-        <Link href="/dashboard/gdpr" className="nav-item" data-active={pathname?.startsWith('/dashboard/gdpr')}>
+        <Link href="/dashboard/gdpr" className="nav-item" data-active={pathname?.startsWith('/dashboard/gdpr')} onClick={handleNavClick}>
           <Icon name="shield" size={16} />
           <span>GDPR purge</span>
         </Link>
       </nav>
 
       <nav className="nav-group" aria-label="System Navigation" style={{ marginTop: 'auto', marginBottom: 'var(--space-3)' }}>
-        <Link href="/" className="nav-item">
+        <Link href="/" className="nav-item" onClick={handleNavClick}>
           <Icon name="arrow-left" size={16} />
           <span>Exit Workspace</span>
         </Link>

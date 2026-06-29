@@ -248,7 +248,7 @@ export default function ChatPage() {
         <div className="split">
           
           {/* Main conversation section */}
-          <section className="panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 520 }}>
+          <section className="panel chat-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 520 }}>
             
             {/* Context title */}
             <div style={{ padding: 'var(--space-5) var(--space-6)', borderBottom: '1px solid var(--border-1)' }} className="row-between">
@@ -260,7 +260,7 @@ export default function ChatPage() {
             </div>
 
             {/* Conversation Messages */}
-            <div style={{ flex: 1, padding: 'var(--space-6)', overflowY: 'auto', maxHeight: '480px' }} className="stack-6">
+            <div style={{ flex: 1, padding: 'var(--space-4)', overflowY: 'auto', maxHeight: '480px' }} className="stack-6 chat-messages">
               {messages.length === 0 ? (
                 <div style={{ minHeight: 320, display: 'grid', placeItems: 'center', color: 'var(--text-3)', textAlign: 'center' }} className="stack-3">
                   <Icon name="quote" size={28} />

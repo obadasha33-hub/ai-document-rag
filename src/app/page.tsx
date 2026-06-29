@@ -73,7 +73,7 @@ export default function LandingPage() {
             <span className="t-h3" style={{ fontWeight: 700 }}>VeritasDoc</span>
           </Link>
         </div>
-        <nav className="row" style={{ gap: 'var(--space-3)', pointerEvents: 'auto' }}>
+        <nav className="row landing-nav" style={{ gap: 'var(--space-3)', pointerEvents: 'auto' }}>
           <select
             value={theme}
             onChange={(e) => changeTheme(e.target.value)}
@@ -89,7 +89,7 @@ export default function LandingPage() {
           </select>
           {isSignedIn ? (
             <>
-              <span className="t-small t-3">Signed in as <strong className="t-2">{user.primaryEmailAddress?.emailAddress}</strong></span>
+              <span className="t-small t-3 signed-in-label">Signed in as <strong className="t-2">{user.primaryEmailAddress?.emailAddress}</strong></span>
               <UserButton />
             </>
           ) : (
@@ -219,8 +219,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              {/* Two buttons with different colors */}
-              <div className="row-center" style={{ gap: 'var(--space-4)', pointerEvents: 'auto' }}>
+              <div className="row" style={{ gap: 'var(--space-4)', justifyContent: 'center', flexWrap: 'wrap', pointerEvents: 'auto' }}>
                 <button 
                   onClick={() => setShowTutorial(true)} 
                   className="btn btn-lg" 
