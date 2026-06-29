@@ -59,15 +59,25 @@ export async function POST(request: NextRequest) {
 
   const { workspaceId, message: query, threadId } = body
 
-  if (!workspaceId) {
-    return NextResponse.json(
-      { error: 'Missing required field: workspaceId' },
-      { status: 400 }
-    )
+  const tenantPrisma = getTenantPrisma(tenantId)
+
+  let activeWorkspaceId = workspaceId
+  if (!activeWorkspaceId) {
+    // Fallback: Resolve tenant's first workspace dynamically for legacy/API clients
+    const firstWorkspace = await tenantPrisma.workspace.findFirst({
+      orderBy: { createdAt: 'asc' },
+    })
+    if (!firstWorkspace) {
+      return NextResponse.json(
+        { error: 'No workspace found for tenant. Please create a workspace first.' },
+        { status: 400 }
+      )
+    }
+    activeWorkspaceId = firstWorkspace.id
   }
 
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  if (!uuidRegex.test(workspaceId)) {
+  if (!uuidRegex.test(activeWorkspaceId)) {
     return NextResponse.json(
       { error: 'Invalid workspaceId format' },
       { status: 400 }
@@ -95,11 +105,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const tenantPrisma = getTenantPrisma(tenantId)
-
   // 1. Verify workspace exists under tenant
   const workspace = await tenantPrisma.workspace.findUnique({
-    where: { id: workspaceId },
+    where: { id: activeWorkspaceId },
   })
 
   if (!workspace) {
@@ -115,7 +123,7 @@ export async function POST(request: NextRequest) {
     const thread = await tenantPrisma.chatThread.findUnique({
       where: { id: activeThreadId },
     })
-    if (!thread || thread.workspaceId !== workspaceId) {
+    if (!thread || thread.workspaceId !== activeWorkspaceId) {
       return NextResponse.json(
         { error: 'Chat thread not found or unauthorized' },
         { status: 404 }
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
     const newThread = await tenantPrisma.chatThread.create({
       data: {
         tenantId,
-        workspaceId,
+        workspaceId: activeWorkspaceId,
         userId: userId || 'system',
         title: query.substring(0, 50) || 'New Conversation',
       },
@@ -134,7 +142,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Perform Hybrid Search & Reranking
-  const searchResults = await hybridSearch(tenantId, workspaceId, query, { limit: 45 })
+  const searchResults = await hybridSearch(tenantId, activeWorkspaceId, query, { limit: 45 })
   
   const combinedResults = [...searchResults]
   try {

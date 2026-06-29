@@ -292,22 +292,6 @@ export default function ChatPage() {
                     <div className="t-body" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
                       {msg.content || (isGenerating && msg.role === 'ASSISTANT' && <span className="spinner spinner-sm" style={{ display: 'inline-block' }} />)}
                     </div>
-                    {/* Render message level inline citation badges */}
-                    {msg.citations && msg.citations.length > 0 && (
-                      <div className="row" style={{ gap: 'var(--space-2)', marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
-                        <span className="t-small t-3">Source:</span>
-                        {msg.citations.map((cit, idx) => (
-                          <span 
-                            key={idx} 
-                            className="badge mono" 
-                            title={cit.snippet} 
-                            style={{ fontSize: 10, cursor: 'help', background: 'var(--panel)', borderColor: 'var(--border-2)' }}
-                          >
-                            [{idx + 1}] {cit.docName} {cit.pageNumber ? `p.${cit.pageNumber}` : ''}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 ))
               )}

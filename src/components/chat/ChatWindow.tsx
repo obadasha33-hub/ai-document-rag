@@ -91,20 +91,7 @@ export default function ChatWindow() {
                     <span className="cursor-blink" aria-label="typing"></span>
                   )}
                 </div>
-                {/* Render citations if available and not streaming */}
-                {!msg.isStreaming && msg.citations && msg.citations.length > 0 && (
-                  <div className="citations">
-                    {msg.citations.map((cite) => (
-                      <span
-                        key={cite.id}
-                        className="badge badge-accent citation-badge"
-                        title={`Document: ${cite.documentName}\nText: ${cite.text}`}
-                      >
-                        [{cite.id}]
-                      </span>
-                    ))}
-                  </div>
-                )}
+
               </div>
             )}
           </div>

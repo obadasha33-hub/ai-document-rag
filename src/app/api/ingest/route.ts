@@ -194,20 +194,18 @@ export async function POST(request: NextRequest) {
       })
       document = doc
 
-      // Insert chunks with real embeddings stored as JSON arrays.
-      for (const item of chunksWithEmbeddings) {
-        const chunkId = randomUUID()
-        await tx.$executeRawUnsafe(
-          'INSERT INTO chunks (id, "tenantId", "documentId", content, "pageNumber", "tokenCount", embedding) VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5, $6, $7::jsonb)',
-          chunkId,
+      // Bulk insert chunks using createMany to avoid pgBouncer transaction timeouts
+      await tx.chunk.createMany({
+        data: chunksWithEmbeddings.map(item => ({
+          id: randomUUID(),
           tenantId,
-          doc.id,
-          item.content,
-          item.metadata?.pageNumber || null,
-          item.tokenCount,
-          JSON.stringify(item.embedding)
-        )
-      }
+          documentId: doc.id,
+          content: item.content,
+          pageNumber: item.metadata?.pageNumber || null,
+          tokenCount: item.tokenCount,
+          embedding: item.embedding,
+        }))
+      })
 
       // Update document to INDEXED status
       const updatedDoc = await tx.document.update({
