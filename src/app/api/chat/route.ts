@@ -241,6 +241,7 @@ export async function POST(request: NextRequest) {
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
               ],
+              stream: true,
               temperature: 0.5,
               max_tokens: 1024,
             }),
