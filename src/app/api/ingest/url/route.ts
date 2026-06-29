@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     const fakeFileSize = Buffer.byteLength(crawlResult.markdown, 'utf8')
 
     // 3. Generate all embeddings outside the transaction to prevent database transaction timeouts
-    const chunksWithEmbeddings = []
+    const chunksWithEmbeddings: any[] = []
     for (const chunk of chunks) {
       const embedding = await getEmbedding(chunk.content)
       chunksWithEmbeddings.push({
