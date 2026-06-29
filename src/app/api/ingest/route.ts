@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
       })
 
       return updatedDoc
-    })
+    }, { timeout: 30000 })
 
     document = result
 
