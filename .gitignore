@@ -53,3 +53,5 @@ data
 *.key
 # clerk configuration (can include secrets)
 /.clerk/
+
+.vercel
